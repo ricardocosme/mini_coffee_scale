@@ -1,5 +1,6 @@
 #include "measure.hpp"
 #include "round.hpp"
+#include "tare.hpp"
 #include "zero_tracking.hpp"
 
 #include <hx711.hpp>
@@ -24,30 +25,11 @@ int main() {
 
     disp.out<font::_8x8>(3, 0, ATT85_SSD1306_STR("measuring"));
     disp.out<font::_8x8>(4, 0, ATT85_SSD1306_STR("tare weight"));
-    int32_t zero{0};
-    bool add{true};
-    for(auto i{0}, c{0}; i < zero_samples; ++i) {
-        zero += hx711::sync_read(scale);
-        if(c == 10) {
-            add = false;
-            disp.out<font::_8x8>(
-                5, 0, ATT85_SSD1306_STR("                "));
-        } else if(c == 0) {
-            add = true;
-            disp.out<font::_8x8>(
-                5, 0, ATT85_SSD1306_STR("                "));
-        }
-        disp.out<font::_8x8>(5, c*8, ATT85_SSD1306_STR("."));
-        if(add) ++c;
-        else --c;
-    }
-    zero /= zero_samples;
-    disp.clear();
-
+    
+    auto zero = tare(scale, zero_samples, disp);
     auto fst_zero = zero;
     
     int32_t rounded_weight{0};
-
     constexpr uint8_t n_diffs{15};
     int32_t diffs[n_diffs];
     
