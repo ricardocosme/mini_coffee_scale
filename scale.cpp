@@ -1,3 +1,7 @@
+#include "measure.hpp"
+#include "round.hpp"
+#include "zero_tracking.hpp"
+
 #include <hx711.hpp>
 #include <att85/ssd1306/display.hpp>
 #include <att85/ssd1306/font/8x8/chars.hpp>
@@ -9,6 +13,7 @@ using namespace att85::ssd1306;
 constexpr uint8_t zero_samples{60};
 constexpr uint8_t n_samples{3};
 constexpr int32_t calibration{1075};
+constexpr uint8_t resolution{10}; //0.1g
 
 int main() {
     display_128x64<> disp;
@@ -41,68 +46,38 @@ int main() {
 
     auto fst_zero = zero;
     
-    int32_t prev_cw{0}, cw{0};
-    constexpr uint8_t n_last{10};
-    uint32_t diffs[n_last];
+    int32_t rounded_weight{0};
+
+    constexpr uint8_t n_diffs{15};
+    int32_t diffs[n_diffs];
     
     while(true) {
         disp.out<font::_8x8>(0, 0, (uint32_t)zero);
         disp.out<font::_8x8>(0, 55, (uint32_t)fst_zero);
         
-        int32_t samples[n_samples];
-        for(uint8_t i{0}; i < n_samples; ++i) 
-            samples[i] = hx711::sync_read(scale);
-        for(uint8_t i{0}; i < n_samples - 1; ++i) {
-            if(samples[i] > samples[i+1]) {
-                auto tmp = samples[i+1];
-                samples[i+1] = samples[i];
-                samples[i] = tmp;                
-            }
-        }
-
-        auto median = samples[1];
+        auto samples = measure(scale);
         
-        int32_t w = ((median - zero) * 100) / calibration;
-        auto diff = w - cw;
-        
-        for(uint8_t i{n_last-1}; i > 0; --i)
+        int32_t weight = ((samples.median - zero) * 100) / calibration;
+        // Save the difference between the current weight and the
+        // previous one and shift to the right all differences that
+        // were previously calculated.
+        diffs[0] = weight - rounded_weight;
+        for(uint8_t i{n_diffs -1 }; i > 0; --i)
             diffs[i] = diffs[i-1];
 
-        diffs[0] = diff;
+        if(labs(diffs[0]) > resolution) rounded_weight = round(weight);
+        else zero = zero_tracking(zero, diffs, n_diffs);
 
-        if(labs(diff) > 10) {
-            if(w % 10 > 5) cw = (w / 10 + 1) * 10;
-            else cw = (w / 10) * 10;
-        } else {
-            bool skip{false};
-            for(uint8_t i{1}; i < n_last; ++i) {
-                if(labs(diffs[i]) > 10) {
-                    skip = true;
-                    break;
-                }
-            }
-            if(!skip) {  
-                if(diff > 5 && diff <= 10) zero += 65; 
-                else if(diff >= -10 && diff < -5) zero -= 65;
-            }
-            skip = false;
-        }
-
-        if(prev_cw != cw) {
-            disp.out<font::_8x8>(7, 36, ATT85_SSD1306_STR("      "));
-            prev_cw = cw;
-        }
-        
         disp.out<font::_8x8>(2, 60, ATT85_SSD1306_STR("       "));
-        disp.out<font::_8x8>(2, 60, diff);
+        disp.out<font::_8x8>(2, 60, diffs[0]);
         disp.out<font::_8x8>(4, 60, ATT85_SSD1306_STR("       "));
-        disp.out<font::_8x8>(4, 60, samples[1]);
+        disp.out<font::_8x8>(4, 60, diffs[0] * calibration / 100);
         
         disp.out<font::_8x8>(2, 0, ATT85_SSD1306_STR("       "));
-        disp.outf2<font::_8x8>(2, 0, w);
+        disp.outf2<font::_8x8>(2, 0, weight);
         disp.out<font::_8x8>(4, 0, ATT85_SSD1306_STR("       "));
-        disp.outf<font::_8x8>(4, 0, cw);
-        auto fw = ((median - fst_zero) * 100) / calibration;
+        disp.outf<font::_8x8>(4, 0, rounded_weight);
+        auto fw = ((samples.median - fst_zero) * 100) / calibration;
         disp.out<font::_8x8>(6, 0, ATT85_SSD1306_STR("       "));
         disp.outf2<font::_8x8>(6, 0, fw);
     }
