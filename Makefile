@@ -6,7 +6,7 @@ CXX=avr-g++
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 OBJDUMP=avr-objdump
-INCLUDE=-I../att85/include
+INCLUDE=-I../att85/include -I../hx711/include
 CXXFLAGS=-std=$(STD_CXX) -g -mmcu=$(MCU_TARGET) -Wall $(OPTIMIZE) -DF_CPU=1000000 $(INCLUDE)
 
 demos = scale
