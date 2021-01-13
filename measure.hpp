@@ -1,17 +1,27 @@
 #pragma once
 
-#include <stdint.h>
+#include "round.hpp"
 
+#include <att85/ssd1306/display.hpp>
+#include <att85/ssd1306/font/8x8/chars.hpp>
 #include <hx711.hpp>
+#include <stdint.h>
+#include <stdlib.h>
 
 struct weight { int32_t min, median, max; };
     
-template<typename HX711>
-auto measure(HX711& sensor) {
+template<typename HX711, typename Display>
+auto measure(HX711& sensor, Display& disp, int32_t zero, int32_t calibration, int32_t curr_sample) {
+    using namespace att85::ssd1306;
     constexpr uint8_t size{3};
     int32_t samples[size];
-    for(uint8_t i{0}; i < size; ++i) 
+    for(uint8_t i{0}; i < size; ++i) {
         samples[i] = hx711::sync_read(sensor);
+        if(labs(samples[i] - curr_sample) > 256) {
+            auto weight = ((samples[1] - zero) * 100) / calibration;
+            disp.template outf<font::_8x8>(4, 0, round(weight));
+        }
+    }
     for(uint8_t i{0}; i < size - 1; ++i) {
         if(samples[i] > samples[i+1]) {
             auto tmp = samples[i+1];

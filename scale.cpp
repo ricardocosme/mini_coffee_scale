@@ -32,13 +32,15 @@ int main() {
     int32_t rounded_weight{0};
     constexpr uint8_t n_diffs{15};
     int32_t diffs[n_diffs];
+    int32_t curr_sample{0};
     
     while(true) {
         disp.out<font::_8x8>(0, 0, (uint32_t)zero);
         disp.out<font::_8x8>(0, 55, (uint32_t)fst_zero);
         
-        auto samples = measure(scale);
-        
+        auto samples = measure(scale, disp, zero, calibration, curr_sample);
+        curr_sample = samples.median;
+            
         int32_t weight = ((samples.median - zero) * 100) / calibration;
         // Save the difference between the current weight and the
         // previous one and shift to the right all differences that
