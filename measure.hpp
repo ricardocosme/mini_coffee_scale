@@ -18,7 +18,7 @@ auto measure(HX711& sensor, Display& disp, int32_t zero, int32_t calibration, in
     for(uint8_t i{0}; i < size; ++i) {
         samples[i] = hx711::sync_read(sensor);
         if(labs(samples[i] - curr_sample) > 256) {
-            auto weight = ((samples[1] - zero) * 100) / calibration;
+            auto weight = ((samples[i] - zero) * 100) / calibration;
             disp.template outf<font::_8x8>(4, 0, round(weight));
         }
     }
