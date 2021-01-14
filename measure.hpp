@@ -15,11 +15,14 @@ auto measure(HX711& sensor, Display& disp, int32_t zero, int32_t calibration, in
     using namespace att85::ssd1306;
     constexpr uint8_t size{3};
     int32_t samples[size];
+    int32_t preview{0};
     for(uint8_t i{0}; i < size; ++i) {
         samples[i] = hx711::sync_read(sensor);
-        if(labs(samples[i] - curr_sample) > 256) {
+        auto diff = labs(samples[i] - curr_sample);
+        if(diff > 323 /*0.3g*/ && diff > preview) {
             auto weight = ((samples[i] - zero) * 100) / calibration;
             disp.template outf<font::_8x8>(4, 0, round(weight));
+            preview = diff;
         }
     }
     for(uint8_t i{0}; i < size - 1; ++i) {
