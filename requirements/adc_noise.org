@@ -12,15 +12,15 @@ The scale must have a capacity of *2000g* and an external resolution of *0.1g*. 
 
 The first thing to be calculated is the amount of quantization that is needed. The *NFC* (noise free counts) is equal to the weight range over the weight resolution:
 
-file:nfc.gif
+[[file:nfc.gif]]
 
 The maximum output voltage(*V_omax*) is equal to the excitation voltage that is applied to the sensor times the sensitivity of the sensor. The power suppply to the HX711 module is *5.14V* and the measured V_exc is *4.05V*:
 
-file:vomax.gif
+[[file:vomax.gif]]
 
 The target peak-to-peak noise should be equal to the maximum output voltage over the *NFC*:
 
-file:target_noise.gif
+[[file:target_noise.gif]]
 
 I didn't say anything about the data rate of the ADC yet. I will begin with *10SPS* (10Hz) because this is the better that I have from ~HX711~ in terms of noise and that frequency allows me to do some oversampling and averaging to obtain some extra resolution and noise attenuation.
 
@@ -46,19 +46,19 @@ If the data set is represented by a histogram, it's possible to see that the dis
 
 The standard deviation using samples is the square root of variance, and the variance is the sum of all the squared differences between the values and the mean over the number of samples minus one:
 
-file:sdev.gif
+[[file:sdev.gif]]
 
 The standard deviation(*sdev*) to the data set is equal to *26.0403 code*. The *LSB* size should be calculated to allow a conversion of the number of codes to a voltage. The measurement of the size of each code represents the resolution of the ADC to a specific *FSR* (full scale range) and gain.
 
 The datasheet shows how to calculate the *FSR*. The AVDD in this system is equal to *4.05V* and the gain is equal to 128:
 
-file:fsr.gif
+[[file:fsr.gif]]
 
-file:lsb.gif
+[[file:lsb.gif]]
 
 Now, the standard deviaton can be calculated using *nV* as unit instead of the number of codes of the ADC:
 
-file:sdev_nv.gif
+[[file:sdev_nv_gif]]
 
 Cool! The standard deviation of *49nV* is very close to *50nV*, which is the value provided by the datasheet.
 
@@ -79,6 +79,6 @@ I've ran the same above analysis with the load cell connected to the ADC and wit
 # &\approx 9.06nV
 # \end{align*}
 
-file:system_noise.gif
+[[file:system_noise.gif]]
 
 In the end, it seems to me that main noise component here is the ADC and one thing than pops out is that I'am very close to "best scenario" that the ~HX711~ can offer to the user because my system noise is *50nV* and my measured ADC intrinsic noise is *49nV*. The datasheet is pointing out *50nV* as the input-referred noise. This outcome suggests that I'm not doing anything wrong in the usage of the ADC, there isn't any reason to looking for something to be improved in terms of the usability, like wiring, grounding, power supply and etc. I'm achieving the result that is proposed by the manufacturer. 
