@@ -62,9 +62,11 @@ Now, the standard deviaton can be calculated using *nV* as unit instead of the n
 
 Cool! The standard deviation of *49nV* is very close to *50nV*, which is the value provided by the datasheet.
 
-Right, but one standard deviation represents only *68%* of the noise. The goal here is achieve a noise below *203nV* peak-to-peak. If the standard deviation value is multiplied by 6.6, the intrinsic peak-to-peak noise of the system should be *~325nV*. The range represents a probability of *99.95%* of the noise. Unfornutately the range *325nV* is above *203nV*. I have ordered a load cell with *2mV/V* of sensitivity. This new sensor will increase the target peak-to-peak noise to *405nV*[Vnoise_pp = 8.1mV / 20,000] and that upgrade should be enough to achieve the system requirements.
+[[https://godbolt.org/z/9E6vqv][I've written a C++ program to calculate the standard deviation of one data set with ADC codes.]] (~noise.cpp~)
 
-* System noise
+Right, but one standard deviation represents only *68%* of the noise. The goal here is achieve a noise below *203nV* peak-to-peak. If the standard deviation value is multiplied by 6.6, the intrinsic peak-to-peak noise of the system should be *~325nV*. The range represents a probability of *99.95%* of the noise. Unfornutately the range *325nV* is above *203nV*. I have ordered a load cell with *2mV/V* of sensitivity. This new sensor will increase the target peak-to-peak noise to *405nV* [Vnoise_pp = 8.1mV / 20,000] and that upgrade should be enough to achieve the system requirements.
+
+** System noise
 
 One question that I asked myself after the above analysis: /Is there any other expressive noise when the load cell is attached to the ADC?/
 
@@ -81,4 +83,4 @@ I've ran the same above analysis with the load cell connected to the ADC and wit
 
 [[file:system_noise.gif]]
 
-In the end, it seems to me that main noise component here is the ADC and one thing than pops out is that I'am very close to "best scenario" that the ~HX711~ can offer to the user because my system noise is *50nV* and my measured ADC intrinsic noise is *49nV*. The datasheet is pointing out *50nV* as the input-referred noise. This outcome suggests that I'm not doing anything wrong in the usage of the ADC, there isn't any reason to looking for something to be improved in terms of the usability, like wiring, grounding, power supply and etc. I'm achieving the result that is proposed by the manufacturer. 
+In the end, it seems to me that main noise component here is the ADC and one thing than pops out is that I'am very close to "best scenario" that the ~HX711~ can offer to the user because my system noise is *50nV* and my measured ADC intrinsic noise is *49nV*. The datasheet of the ADC is pointing out *50nV* as the input-referred noise. This outcome suggests that I'm not doing anything wrong in the usage of the ADC, there isn't any reason to looking for something to be improved in terms of the usability, like wiring, grounding, power supply and etc. I'm achieving the result that is proposed by the manufacturer. 
