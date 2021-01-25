@@ -1,0 +1,84 @@
+* Mini coffee scale
+
+The goal of this project is to build a mini coffee scale to brew my coffee directly into the mug using AVR. At least for the first version of the prototype, an ATiny85 will be used as a microcontroller.
+
+This document is the first one related to this project and the focus here won't be the AVR architecture or the software. 
+
+A single-point load cell sensor and a high-resolution ADC are used to measure weight and one first step is to establish the system requirements in order to choose the best cost-effective sensor and ADC.
+
+** System noise requirements
+
+The scale must have a capacity of *2000g* and an external resolution of *0.1g*. The first attempt will be to use a sensor from the scale *AWS SC-2Kg* with an internal resolution of *0.1g* and a ~HX711~ module as an ADC. The sensor has a sensitivity of approximately *1mV/V*. Unfortunately I didn't found a datasheet to it.
+
+The first thing to be calculated is the amount of quantization that is needed. The *NFC* (noise free counts) is equal to the weight range over the weight resolution:
+
+file:nfc.gif
+
+The maximum output voltage(*V_omax*) is equal to the excitation voltage that is applied to the sensor times the sensitivity of the sensor. The power suppply to the HX711 module is *5.14V* and the measured V_exc is *4.05V*:
+
+file:vomax.gif
+
+The target peak-to-peak noise should be equal to the maximum output voltage over the *NFC*:
+
+file:target_noise.gif
+
+I didn't say anything about the data rate of the ADC yet. I will begin with *10SPS* (10Hz) because this is the better that I have from ~HX711~ in terms of noise and that frequency allows me to do some oversampling and averaging to obtain some extra resolution and noise attenuation.
+
+In conclusion to this topic, the ADC plus the sensor which I will call as the system, it must have an absolute peak-to-peak noise less than *203nV*. I am using an absolute parameter here to measure the noise instead of a relative one like the number of noise free bits, because it is more easy to compare different ADCs without worrying about the value used as the *Vref*.
+
+** HX711 intrinsic noise
+
+One question that arises is: /What is the amount of noise that is inserted into the system by the ADC(~HX711~)?/
+
+The ~HX711~ is a high-resolution ADC with a PGA of gain 32/64/128 and in this case the predominant noise is the ADC's thermal noise plus the amplifier's noise. It's an intrinsic noise, the quantization noise is not expressive in this scenario but the highest provided gain of 128 offers a better relationship between the signal and the noise(SNR). 
+
+The [[https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf][datasheet]] mentions an input-referred noise of *50nV RMS* using *128* of gain and *10SPS* as the data rate. This is an absolute parameter that enables us to do some calculations to try to answer the question above in conjunction with the system requirements. The input-referred noise can be model as a voltage source of noise attached to input of the system, which means a noise before the amplification and the ADC conversion.
+
+I've decided to try to measure the intrisic noise of the ~HX711~ to compare with the value that is provided by the datasheet. This experiment gave me more conffidence to continue the project and it was a fun exercise of statistics.
+
+In order to measure the noise, the inputs ~A+~ and ~A-~ were shorted and *1,200* samples of codes of the ADC were collected. 
+
+file:adc_noise.svg
+
+The graph above plots the ADC codes and it allows an eyeball examination to see if there is any expressive creep of the sensor in the range. The goal here is to achieve something that can be modeled by a constant function, or in other words a line with slope equal to zero.
+
+If the data set is represented by a histogram, it's possible to see that the distribution of ADC codes can be modeled by a normal distribution. The standard deviation(*sdev*) of the data set can be calculated to estimate the standard deviation of the population. I believe that the value can be compared with the value provided in the datasheet using RMS.
+
+The standard deviation using samples is the square root of variance, and the variance is the sum of all the squared differences between the values and the mean over the number of samples minus one:
+
+file:sdev.gif
+
+The standard deviation(*sdev*) to the data set is equal to *26.0403 code*. The *LSB* size should be calculated to allow a conversion of the number of codes to a voltage. The measurement of the size of each code represents the resolution of the ADC to a specific *FSR* (full scale range) and gain.
+
+The datasheet shows how to calculate the *FSR*. The AVDD in this system is equal to *4.05V* and the gain is equal to 128:
+
+file:fsr.gif
+
+file:lsb.gif
+
+Now, the standard deviaton can be calculated using *nV* as unit instead of the number of codes of the ADC:
+
+file:sdev_nv.gif
+
+Cool! The standard deviation of *49nV* is very close to *50nV*, which is the value provided by the datasheet.
+
+Right, but one standard deviation represents only *68%* of the noise. The goal here is achieve a noise below *203nV* peak-to-peak. If the standard deviation value is multiplied by 6.6, the intrinsic peak-to-peak noise of the system should be *~325nV*. The range represents a probability of *99.95%* of the noise. Unfornutately the range *325nV* is above *203nV*. I have ordered a load cell with *2mV/V* of sensitivity. This new sensor will increase the target peak-to-peak noise to *405nV*[Vnoise_pp = 8.1mV / 20,000] and that upgrade should be enough to achieve the system requirements.
+
+* System noise
+
+One question that I asked myself after the above analysis: /Is there any other expressive noise when the load cell is attached to the ADC?/
+
+I've ran the same above analysis with the load cell connected to the ADC and without any change in the weight to be measured. Taking *1690 samples* to build a data set to represent the system noise, the standard deviation has a value of *26.4778 code*, which means a system noise(load cell + ADC) of *~50nV*. I believe that the sensor noise, or better saying the external noise to the ADC, can be obtained by the following steps if the RMS noise of the system is considered as the combination of two noise components:
+
+# \begin{align*}
+# V_{\mbox{noise system}}(RMS) &= \sqrt{V_{\mbox{noise ADC}}^2 + V_{\mbox{noise sensor}}^2} \\
+# V_{\mbox{noise system}}^2 &= V_{\mbox{noise ADC}}^2 + V_{\mbox{noise sensor}}^2 \\
+# V_{\mbox{noise sensor}}^2 &= V_{\mbox{noise system}}^2 - V_{\mbox{noise ADC}}^2 \\
+# V_{\mbox{noise sensor}} &= \sqrt{V_{\mbox{noise system}}^2 - V_{\mbox{noise ADC}}^2} \\
+# V_{\mbox{noise sensor}} &\approx \sqrt{(26.4778 * 1.89nV)^2 - (26.0403 * 1.89nV)^2} \\
+# &\approx 9.06nV
+# \end{align*}
+
+file:system_noise.gif
+
+In the end, it seems to me that main noise component here is the ADC and one thing than pops out is that I'am very close to "best scenario" that the ~HX711~ can offer to the user because my system noise is *50nV* and my measured ADC intrinsic noise is *49nV*. The datasheet is pointing out *50nV* as the input-referred noise. This outcome suggests that I'm not doing anything wrong in the usage of the ADC, there isn't any reason to looking for something to be improved in terms of the usability, like wiring, grounding, power supply and etc. I'm achieving the result that is proposed by the manufacturer. 
