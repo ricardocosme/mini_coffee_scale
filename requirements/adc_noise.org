@@ -58,7 +58,7 @@ The datasheet shows how to calculate the *FSR*. The AVDD in this system is equal
 
 Now, the standard deviaton can be calculated using *nV* as unit instead of the number of codes of the ADC:
 
-[[file:sdev_nv_gif]]
+[[file:sdev_nv.gif]]
 
 Cool! The standard deviation of *49nV* is very close to *50nV*, which is the value provided by the datasheet.
 
