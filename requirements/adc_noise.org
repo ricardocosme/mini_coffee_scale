@@ -38,7 +38,7 @@ I've decided to try to measure the intrisic noise of the ~HX711~ to compare with
 
 In order to measure the noise, the inputs ~A+~ and ~A-~ were shorted and *1,200* samples of codes of the ADC were collected. 
 
-file:adc_noise.png
+[[file:adc_noise.png]]
 
 The graph above plots the ADC codes and it allows an eyeball examination to see if there is any expressive creep of the sensor in the range. The goal here is to achieve something that can be modeled by a constant function, or in other words a line with slope equal to zero.
 
