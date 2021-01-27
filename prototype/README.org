@@ -20,5 +20,5 @@ This is the first functional prototype of a mini scale to help me to brew my cof
 
 [[file:media/scale_cap_600px.jpg]]
 
-Capacity: 2000g
-Resolution: 0.1g
+| Capacity   | 2000g |
+| Resolution | 0.1g  |
