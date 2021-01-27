@@ -1,0 +1,22 @@
+** Mini Coffee Scale [prototype v0]
+
+This is the first functional prototype of a mini scale to help me to brew my coffee. I'm using the scale to weight the coffee beans before grinding them and it is also used to weight the liquid coffee during the pour over process.
+
+file:scale_with_beans.jpg
+
+*** Components
+1. ATtiny85
+2. SSD1306 128x64
+3. HX711 @ 10SPS,gain=128 (ADC)
+4. Single-point load cell from a AWS SC-2KG
+5. TP4056 module
+6. MT3608 module
+7. 530mAh LiPo battery
+8. 3d parts designed using Blender and printed by Creality CR10
+
+file:media/scale_600px.jpg
+file:media/scale_parts.jpg
+file:media/scale_cap.jpg
+
+Capacity: 2000g
+Resolution: 0.1g
