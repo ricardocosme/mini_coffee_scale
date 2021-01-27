@@ -11,13 +11,13 @@
 struct weight { int32_t min, median, max; };
     
 template<typename HX711, typename Display>
-auto measure(HX711& sensor, Display& disp, int32_t zero, int32_t calibration, int32_t curr_sample) {
+auto measure(HX711& adc, Display& disp, int32_t zero, int32_t calibration, int32_t curr_sample) {
     using namespace att85::ssd1306;
     constexpr uint8_t size{5};
     int32_t samples[size];
     int32_t preview{0};
     for(uint8_t i{0}; i < size; ++i) {
-        samples[i] = hx711::sync_read(sensor);
+        samples[i] = adc.read();
         auto diff = labs(samples[i] - curr_sample);
         if(diff > 323 /*0.3g*/ && diff > preview) {
             auto weight = ((samples[i] - zero) * 100) / calibration;

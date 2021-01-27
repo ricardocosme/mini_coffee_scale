@@ -19,7 +19,7 @@ int main() {
     disp.on();
     disp.clear();
 
-    hx711::sensor<PB4, PB3> scale;
+    hx711::adc<PB4, PB3> scale;
 
     disp.out<font::_8x8>(3, 0, ATT85_SSD1306_STR("measuring"));
     disp.out<font::_8x8>(4, 0, ATT85_SSD1306_STR("tare weight"));
